@@ -2,6 +2,7 @@ package com.kh.bbs.domain.postBoard.dao;
 
 import com.kh.bbs.domain.entity.PostBoards;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Repository
 public class PostBoardsDAOImpl implements PostBoardsDAO {
