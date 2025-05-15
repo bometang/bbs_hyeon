@@ -15,19 +15,19 @@
   </div>
   <div>
     <label for="">제목</label>
-    <input type="text" name="title" id="" th:value="*{title}">
+    <input type="text" name="title" id="title" th:value="*{title}">
     <span class="field-err" th:each="err:${#fields.errors('title')}" th:text="${err}"></span>
     <span class="field-err" id='errTitle'></span>
   </div>
   <div>
     <label for="">작성자</label>
-    <input type="text" name="userName" id="" th:value="*{userName}">
+    <input type="text" name="userName" id="userName" th:value="*{userName}">
     <span class="field-err" th:each="err:${#fields.errors('userName')}" th:text="${err}"></span>
     <span class="field-err" id='errUserName'></span>
   </div>
   <div>
     <label for="">내용</label>
-    <input type="text" name="content" id="" th:value="*{content}">
+    <input type="text" name="content" id="content" th:value="*{content}">
     <span class="field-err" th:each="err:${#fields.errors('content')}" th:text="${err}"></span>
     <span class="field-err" id='errContent'></span>
   </div>
@@ -73,10 +73,6 @@
     //내용
     if(content.value.length == 0){
       errContent.textContent = '내용을 입력하세요';
-      content.focus();
-      return;
-    }else if( getBytesSize(content.value) > 6){
-      errContent.textContent = '작성자 이름은 6자를 초과할수 없습니다.';
       content.focus();
       return;
     }else {
