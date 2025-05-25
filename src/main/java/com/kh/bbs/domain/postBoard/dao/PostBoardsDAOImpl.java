@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -24,20 +23,6 @@ import java.util.Optional;
 public class PostBoardsDAOImpl implements PostBoardsDAO {
   final private NamedParameterJdbcTemplate template;
 
-  /*목록*/
-  //수동 매핑
-  RowMapper<PostBoards> postsRowMapper(){
-
-    return (rs, rowNum)->{
-      PostBoards postBoards = new PostBoards();
-      postBoards.setPostId(rs.getLong("post_id"));
-      postBoards.setTitle(rs.getString("title"));
-      postBoards.setUserName(rs.getString("user_name"));
-      postBoards.setCdate(rs.getString("cdate"));
-      return postBoards;
-    };
-  }
-
   /**
    * 게시글 등록
    * @param postBoards
@@ -46,8 +31,8 @@ public class PostBoardsDAOImpl implements PostBoardsDAO {
   @Override
   public Long save(PostBoards postBoards) {
     StringBuffer sql = new StringBuffer();
-    sql.append("INSERT INTO postBoard (post_id, title, content, user_name) ");
-    sql.append("VALUES (postBoard_post_id_seq.nextval, :title, :content, :userName) ");
+    sql.append("INSERT INTO POSTBOARD (post_id,title,content,member_id,code_id) ");
+    sql.append("VALUES (postBoard_post_id_seq.nextval,:title, :content, :memberId,'pb01N') ");
 
     //BeanPropertySqlParameterSource : 자바객체 필드명과 SQL파라미터명이 같을때 자동 매칭함.
     SqlParameterSource param = new BeanPropertySqlParameterSource(postBoards);
@@ -69,12 +54,18 @@ public class PostBoardsDAOImpl implements PostBoardsDAO {
   public List<PostBoards> findAll() {
     //sql
     StringBuffer sql = new StringBuffer();
-    sql.append("  SELECT post_id, title, user_name,TO_CHAR(cdate, 'YYYY-MM-DD HH24:MI') AS cdate ");
-    sql.append("    FROM postBoard ");
-    sql.append("ORDER BY post_id desc ");
+    sql.append("SELECT ");
+    sql.append("p.post_id as post_id, ");
+    sql.append("p.title as title, ");
+    sql.append("m.nickname    AS nickname, ");
+    sql.append("p.cdate AS cdate ");
+    sql.append("FROM postboard p ");
+    sql.append("JOIN member   m ");
+    sql.append("ON p.member_id = m.member_id ");
+    sql.append("ORDER BY post_id DESC ");
 
     //db요청
-    List<PostBoards> list = template.query(sql.toString(), postsRowMapper());
+    List<PostBoards> list = template.query(sql.toString(), BeanPropertyRowMapper.newInstance(PostBoards.class));
 
     return list;
   }
@@ -87,9 +78,10 @@ public class PostBoardsDAOImpl implements PostBoardsDAO {
   @Override
   public Optional<PostBoards> findById(Long id) {
     StringBuffer sql = new StringBuffer();
-    sql.append("SELECT post_id, title,user_name, TO_CHAR(cdate, 'YYYY-MM-DD HH24:MI') AS cdate, TO_CHAR(udate, 'YYYY-MM-DD HH24:MI') AS udate, content ");
-    sql.append("  FROM postBoard ");
-    sql.append(" WHERE post_id = :id ");
+    sql.append("SELECT post_id,title, m.nickname AS nickname, p.cdate AS cdate, p.udate AS udate, content, p.code_id AS code_id ");
+    sql.append("FROM postBoard p ");
+    sql.append("JOIN MEMBER m ON p.member_id = m.member_id ");
+    sql.append("WHERE p.POST_ID= :id ");
 
     SqlParameterSource param = new MapSqlParameterSource().addValue("id",id);
 
@@ -142,7 +134,8 @@ public class PostBoardsDAOImpl implements PostBoardsDAO {
    * @return 게시글 수정 건수
    */
   @Override
-  public int updateById(Long postId, PostBoards postBoards) {    StringBuffer sql = new StringBuffer();
+  public int updateById(Long postId, PostBoards postBoards) {
+    StringBuffer sql = new StringBuffer();
     sql.append("UPDATE postBoard ");
     sql.append("   SET title = :title, content = :content, udate = SYSTIMESTAMP ");
     sql.append(" WHERE post_id = :postId ");

@@ -21,9 +21,7 @@
   </div>
   <div>
     <label for="">작성자</label>
-    <input type="text" name="userName" id="userName" th:value="*{userName}">
-    <span class="field-err" th:each="err:${#fields.errors('userName')}" th:text="${err}"></span>
-    <span class="field-err" id='errUserName'></span>
+    <input type="text" name="nickname" id="nickname" th:value="*{nickname}" readonly>
   </div>
   <div>
     <label for="">내용</label>
@@ -57,18 +55,6 @@
       return;
     }else {
       errTitle.textContent = '';
-    }
-    //작성자
-    if(userName.value.length == 0){
-      errUserName.textContent = '작성자를 입력하세요';
-      userName.focus();
-      return;
-    }else if( getBytesSize(userName.value) > 6){
-      errUserName.textContent = '작성자 이름은 6자를 초과할수 없습니다.';
-      userName.focus();
-      return;
-    }else {
-      errUserName.textContent = '';
     }
     //내용
     if(content.value.length == 0){

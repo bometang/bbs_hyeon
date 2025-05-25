@@ -24,7 +24,7 @@
             <td><input type="checkbox" name="postIds" th:value="*{postId}"></td>
             <td th:text="*{postId}">1</td>
             <td><a th:href="@{/boards/{id}(id=*{postId})}" th:text="*{title}">제목</a> </td>
-            <td th:text="*{userName}">이름</td>
+            <td th:text="*{nickname}">이름</td>
             <td th:text="*{cdate}">날짜</td>
         </tr>
         </tbody>

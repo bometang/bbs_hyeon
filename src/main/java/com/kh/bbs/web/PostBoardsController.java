@@ -55,7 +55,7 @@ public class PostBoardsController {
     //2)정상로직
     PostBoards postBoards = new PostBoards();
     postBoards.setTitle(saveForm.getTitle());
-    postBoards.setUserName(saveForm.getUserName());
+    postBoards.setMemberId(1L);
     postBoards.setContent(saveForm.getContent());
 
     Long pid = postBoardsSVC.save(postBoards);
@@ -79,7 +79,7 @@ public class PostBoardsController {
     detailForm.setPostId(findedPostBoarders.getPostId());
     detailForm.setTitle(findedPostBoarders.getTitle());
     detailForm.setContent(findedPostBoarders.getContent());
-    detailForm.setUserName(findedPostBoarders.getUserName());
+    detailForm.setNickname(findedPostBoarders.getNickname());
     detailForm.setUdate(findedPostBoarders.getUdate());
     detailForm.setCdate(findedPostBoarders.getCdate());
 
@@ -122,7 +122,8 @@ public class PostBoardsController {
     updateForm.setPostId(findedPostBoards.getPostId());
     updateForm.setTitle(findedPostBoards.getTitle());
     updateForm.setContent(findedPostBoards.getContent());
-    updateForm.setUserName(findedPostBoards.getUserName());
+    updateForm.setMemberId(1L);
+    updateForm.setNickname(findedPostBoards.getNickname());
     updateForm.setUdate(findedPostBoards.getUdate());
 
     model.addAttribute("updateForm",updateForm);
@@ -148,7 +149,7 @@ public class PostBoardsController {
     postBoards.setPostId(updateForm.getPostId());
     postBoards.setTitle(updateForm.getTitle());
     postBoards.setContent(updateForm.getContent());
-    postBoards.setUserName(updateForm.getUserName());
+    postBoards.setNickname(updateForm.getNickname());
 
     int rows = postBoardsSVC.updateById(postId, postBoards);
 

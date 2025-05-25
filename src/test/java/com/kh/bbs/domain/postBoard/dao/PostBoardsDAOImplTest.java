@@ -31,7 +31,7 @@ class PostBoardsDAOImplTest {
   void save(){
     PostBoards postBoards = new PostBoards();
     postBoards.setTitle("제목1");
-    postBoards.setUserName("유저1");
+    postBoards.setNickname("유저1");
     postBoards.setContent("내용1");
 
     Long pid = postBoardsDAO.save(postBoards);
