@@ -14,8 +14,8 @@ public interface CodeSVC {
   List<CodeDTO> getCodes(CodeId pcodeId);
 
   /**
-   * A02 코드 정보 가져오기
-   * @return A02 코드 정보
+   * M01 코드 정보 가져오기
+   * @return M01 코드 정보
    */
   List<CodeDTO> getM01();
 

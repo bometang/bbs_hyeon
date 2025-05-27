@@ -4,11 +4,14 @@ import com.kh.bbs.domain.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -17,21 +20,95 @@ public class MemberDAOImpl implements MemberDAO{
   final private NamedParameterJdbcTemplate template;
 
   @Override
-  public Optional<Member> saveId(Long id){
+  public Member insertMember(Member member) {
+    // 1) sql 준비
     StringBuffer sql = new StringBuffer();
-    sql.append("SELECT member_id, nickname, email, passwd,code_id,cdate,udate ");
-    sql.append("FROM MEMBER ");
-    sql.append("WHERE member_id = :id ");
+    sql.append("insert into member (member_id,nickname,email,passwd,tel,gender,hobby,region) ");
+    sql.append("values(member_member_id_seq.nextval,:nickname,:email,:passwd,:tel,:gender,:hobby,:region) ");
 
-    SqlParameterSource param = new MapSqlParameterSource().addValue("id",id);
+    // 2) sql 실행
+    SqlParameterSource param = new BeanPropertySqlParameterSource(member);
+    //KeyHolder 의 역할 : insert쿼리를 실행한 후 데이터베이스에서 자동 생성된 키(pk,시퀀스)만을 반환 하는데 사용
+    KeyHolder keyHolder = new GeneratedKeyHolder();
+    int rows = template.update(sql.toString(), param, keyHolder, new String[]{"member_id"});
 
-    Member m1 = null;
+    long memberId = ((Number) keyHolder.getKeys().get("member_id")).longValue();
+
+    return findByMemberId(memberId).get();
+  }
+
+  @Override
+  public boolean isExist(String email) {
+    StringBuffer sql = new StringBuffer();
+    sql.append("select count(*) ");
+    sql.append("  from member ");
+    sql.append(" where email = :email ");
+
+    Map<String,String> param = Map.of("email",email);
+    Integer cntOfRec = template.queryForObject(sql.toString(), param, Integer.class);
+
+    return (cntOfRec == 1) ? true : false;
+  }
+
+  @Override
+  public Optional<Member> findByMemberId(Long memberId) {
+    StringBuffer sql = new StringBuffer();
+    sql.append("select  member_id, ");
+    sql.append("        email, ");
+    sql.append("        passwd, ");
+    sql.append("        tel, ");
+    sql.append("        nickname, ");
+    sql.append("        gender, ");
+    sql.append("        hobby, ");
+    sql.append("        region, ");
+    sql.append("        gubun, ");
+    sql.append("        pic, ");
+    sql.append("        cdate, ");
+    sql.append("        udate ");
+    sql.append(" from member ");
+    sql.append("where member_id = :memberId ");
+
+    Map<String,Long> param = Map.of("memberId",memberId);
     try {
-      m1 = template.queryForObject(sql.toString(), param, BeanPropertyRowMapper.newInstance(Member.class));
-    } catch (EmptyResultDataAccessException e) { //template.queryForObject() : 레코드를 못찾으면 예외 발생
-      return Optional.empty();
-    }
+      Member member = template.queryForObject(
+          sql.toString(), param, BeanPropertyRowMapper.newInstance(Member.class));
 
-    return  Optional.of(m1);
+      return Optional.of(member);
+
+    } catch (EmptyResultDataAccessException e) {
+      return Optional.empty();
+
+    }
+  }
+
+  @Override
+  public Optional<Member> findByEmail(String email) {
+    StringBuffer sql = new StringBuffer();
+    sql.append("select  member_id, ");
+    sql.append("        email, ");
+    sql.append("        passwd, ");
+    sql.append("        tel, ");
+    sql.append("        nickname, ");
+    sql.append("        gender, ");
+    sql.append("        hobby, ");
+    sql.append("        region, ");
+    sql.append("        gubun, ");
+    sql.append("        pic, ");
+    sql.append("        cdate, ");
+    sql.append("        udate ");
+    sql.append(" from member ");
+    sql.append("where email = :email ");
+
+    Map<String,String> param = Map.of("email",email);
+    try {
+      Member member = template.queryForObject(
+          sql.toString(), param,BeanPropertyRowMapper.newInstance(Member.class));
+
+      return Optional.of(member);
+
+    } catch (EmptyResultDataAccessException e) {
+      return Optional.empty();
+
+    }
   }
 }
