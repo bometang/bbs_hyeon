@@ -25,6 +25,16 @@ public class PostBoardsSVCImpl implements PostBoardsSVC {
     return postBoardsDAO.findAll();
   }
 
+  @Override
+  public List<PostBoards> findAll(int pageNo, int numOfRows) {
+    return postBoardsDAO.findAll(pageNo, numOfRows);
+  }
+
+  @Override
+  public int getTotalCount() {
+    return postBoardsDAO.getTotalCount();
+  }
+
   //게시글 조회
   @Override
   public Optional<PostBoards> findById(Long id) {

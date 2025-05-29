@@ -12,6 +12,10 @@ public interface PostBoardsDAO {
   //게시글 목록
   List<PostBoards> findAll();
 
+  List<PostBoards> findAll(int pageNo, int numOfRows);
+
+  int getTotalCount();
+
   //게시글확인
   Optional<PostBoards> findById(Long id);
 

@@ -11,6 +11,10 @@ public interface PostBoardsSVC {
   // 게시판 목록
   List<PostBoards> findAll();
 
+  List<PostBoards> findAll(int pageNo, int numOfRows);
+
+  int getTotalCount();
+
   // 게시판 조회
   Optional<PostBoards> findById(Long id);
 

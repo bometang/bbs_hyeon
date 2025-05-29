@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -22,6 +23,18 @@ import java.util.Optional;
 @Repository
 public class PostBoardsDAOImpl implements PostBoardsDAO {
   final private NamedParameterJdbcTemplate template;
+
+  //수동매핑
+  private RowMapper<PostBoards> doRowMapper(){
+
+    return (rs, rowNum)->{
+      PostBoards postBoards = new PostBoards();
+      postBoards.setPostId(rs.getLong("post_id"));
+      postBoards.setTitle(rs.getString("title"));
+      postBoards.setNickname(rs.getString("nickname"));
+      postBoards.setCdate(rs.getTimestamp("cdate").toLocalDateTime());      return postBoards;
+    };
+  }
 
   /**
    * 게시글 등록
@@ -68,6 +81,34 @@ public class PostBoardsDAOImpl implements PostBoardsDAO {
     List<PostBoards> list = template.query(sql.toString(), BeanPropertyRowMapper.newInstance(PostBoards.class));
 
     return list;
+  }
+
+  @Override
+  public List<PostBoards> findAll(int pageNo, int numOfRows) {
+    //sql
+    StringBuffer sql = new StringBuffer();
+    sql.append("  SELECT p.post_id as post_id,p.title as title,m.nickname    AS nickname,p.cdate AS cdate ");
+    sql.append("    FROM postboard p ");
+    sql.append("JOIN member   m ");
+    sql.append("ON p.member_id = m.member_id ");
+    sql.append("ORDER BY p.post_id DESC ");
+    sql.append("  OFFSET (:pageNo -1) * :numOfRows ROWS ");
+    sql.append("FETCH NEXT :numOfRows ROWS only ");
+
+    Map<String, Integer> map = Map.of("pageNo", pageNo, "numOfRows", numOfRows);
+    List<PostBoards> list = template.query(sql.toString(), map, doRowMapper());
+
+    return list;
+  }
+
+  @Override
+  public int getTotalCount() {
+    String sql = "select count(post_id) from postBoard ";
+
+    SqlParameterSource param = new MapSqlParameterSource();
+    int i = template.queryForObject(sql, param, Integer.class);
+
+    return i;
   }
 
   /**
