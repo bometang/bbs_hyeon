@@ -12,6 +12,7 @@ public class PostComment {
   private Long depth;          //게시글 작성자 아이디
   private String content;        //게시글 작성자 이름
   private Long memberId;          //게시글 코드
+  private String nickname;
   private String codeId;
   private LocalDateTime cdate;    //게시글 등록시간
   private LocalDateTime udate;    //게시글 수정시간

@@ -34,7 +34,10 @@ function displayPostBoardList(postBoards) {
         postBoard =>
           `<tr data-pid=${postBoard.postId}>
             <td>${postBoard.postId}</td>
-            <td>${postBoard.title}</td></tr>`,
+            <td>${postBoard.title}</td>
+            <td>${postBoard.nickname}</td>
+            <td>${postBoard.cdate}</td>
+            <td>${postBoard.udate}</td></tr>`,
       )
       .join('');
     return $tr;
@@ -47,6 +50,9 @@ function displayPostBoardList(postBoards) {
         <tr>
           <th>게시글번호</th>
           <th>제목</th>
+          <th>작성자</th>
+          <th>작성일</th>
+          <th>수정일</th>
         </tr>
       </thead>
       <tbody>

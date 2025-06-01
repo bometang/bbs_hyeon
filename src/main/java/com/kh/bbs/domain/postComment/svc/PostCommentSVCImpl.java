@@ -19,6 +19,12 @@ public class PostCommentSVCImpl implements PostCommentSVC{
     return postCommentDAO.save(postComment);
   }
 
+  //대댓글 목록
+  @Override
+  public Long commentSave(PostComment postComment) {
+    return postCommentDAO.commentSave(postComment);
+  }
+
   //댓글 목록
   @Override
   public List<PostComment> findAll(Long id) {
@@ -50,8 +56,8 @@ public class PostCommentSVCImpl implements PostCommentSVC{
 
   //댓글 수정
   @Override
-  public int updateById(Long postId, PostComment postcomment) {
-    return postCommentDAO.updateById(postId, postcomment);
+  public int updateById(Long commentId, PostComment content) {
+    return postCommentDAO.updateById(commentId, content);
   }
 
 }

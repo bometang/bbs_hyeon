@@ -9,6 +9,9 @@ public interface PostCommentDAO {
   //댓글등록
   Long save(PostComment postComment);
 
+  //대댓글등록
+  Long commentSave(PostComment postComment);
+
   //댓글 목록
   List<PostComment> findAll(Long id);
 
@@ -24,5 +27,5 @@ public interface PostCommentDAO {
 
 
   //댓글수정
-  int updateById(Long postId, PostComment postComment);
+  int updateById(Long postCommentId, PostComment postComment);
 }

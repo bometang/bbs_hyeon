@@ -8,6 +8,10 @@ import java.util.Optional;
 public interface PostCommentSVC {
   // 등록
   Long save(PostComment postcomment);
+
+  //대댓글등록
+  Long commentSave(PostComment postComment);
+
   // 댓글 목록
   List<PostComment> findAll(Long id);
 
@@ -24,5 +28,5 @@ public interface PostCommentSVC {
 
 
   //댓글 수정
-  int updateById(Long postId, PostComment postcomment);
+  int updateById(Long commentId, PostComment content);
 }

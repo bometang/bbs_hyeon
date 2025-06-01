@@ -67,10 +67,7 @@ public class PostBoardsDAOImpl implements PostBoardsDAO {
   public List<PostBoards> findAll() {
     //sql
     StringBuffer sql = new StringBuffer();
-    sql.append("SELECT ");
-    sql.append("p.post_id as post_id, ");
-    sql.append("p.title as title, ");
-    sql.append("m.nickname    AS nickname, ");
+    sql.append("  SELECT p.post_id as post_id,p.title as title,m.nickname    AS nickname,p.cdate AS cdate ");
     sql.append("p.cdate AS cdate ");
     sql.append("FROM postboard p ");
     sql.append("JOIN member   m ");
