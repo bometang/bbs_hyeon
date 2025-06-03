@@ -4,15 +4,19 @@ import com.kh.bbs.domain.entity.PostBoards;
 import com.kh.bbs.domain.postBoard.svc.PostBoardsSVC;
 import com.kh.bbs.web.api.ApiResponse;
 import com.kh.bbs.web.api.ApiResponseCode;
+import com.kh.bbs.web.api.postBoard.SaveApi;
 import com.kh.bbs.web.api.postBoard.UpdateApi;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @RequestMapping("/api/postBoards")
@@ -22,6 +26,26 @@ public class ApiPostBoardsController {
 
 
   private final PostBoardsSVC postBoardsSVC;
+
+  //상품 생성      //   POST    /postBoards  =>      POST http://localhost:9080/api/postBoards
+  @PostMapping
+  //@RequestBody : 요청메세지 body에 포함된 json포멧 문자열을 java 객체로 변환
+  public ResponseEntity<ApiResponse<PostBoards>> add(
+      @RequestBody @Valid SaveApi saveApi
+  ) {
+    log.info("saveApi={}", saveApi);
+
+    PostBoards postBoards = new PostBoards();
+    BeanUtils.copyProperties(saveApi, postBoards);
+
+    Long id = postBoardsSVC.save(postBoards);
+    Optional<PostBoards> optionalPostBoards = postBoardsSVC.findById(id);
+    PostBoards findedPostBoards = optionalPostBoards.orElseThrow();
+
+    ApiResponse<PostBoards> postBoardsApiResponse = ApiResponse.of(ApiResponseCode.SUCCESS, findedPostBoards);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(postBoardsApiResponse);
+  }
 
 
   //게시글 조회      //   GET     /PostBoards/{id} =>  GET http://localhost:9080/api/PostBoards/{id}
