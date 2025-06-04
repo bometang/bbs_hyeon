@@ -1,21 +1,13 @@
 import { ajax,  PaginationUI} from '/js/common.js';
-
-let pid = null;
+//<script src="/js/main.js" defer></script>
+const board = document.querySelector(".board");     //게시판 클래스명으로 객체 가져오기
+const pid = board.id;                               //id 추출로 게시판 아이디 저장
 
 let currentPage = 1; // 현재 페이지를 위한 전역 변수
 let initialPage = 1; // 게시글 추가 후 이동할 페이지 (1페이지)
 
 const recordsPerPage = 10;        // 페이지당 레코드수
 const pagesPerPage = 5;          // 한페이지당 페이지수
-
-document.addEventListener('DOMContentLoaded', () => {
-  const raw = document.getElementById('rawPostId').value;
-  pid = Number(raw);          // ← 전역 pid 에 바로 할당
-  if (pid) {
-    getPostBoard(pid);
-    configPagination();
-  }
-});
 
 //게시글 조회
 const getPostBoard = async pid => {
@@ -24,12 +16,13 @@ const getPostBoard = async pid => {
     const result = await ajax.get(url);
     console.log(result);
     if (result.header.rtcd === 'S00') {
-      displayReadForm(result.body);
+        return result.body;
 
     } else if(result.header.rtcd.substr(0,1) == 'E'){
         for(let key in result.header.details){
             console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
         }
+        return result.header.details;
     } else {
       alert(result.header.rtmsg);
     }
@@ -51,6 +44,7 @@ const delPostBoard = async pid => {
         for(let key in result.header.details){
             console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
         }
+        return result.header.details;
     } else {
       alert(result.header.rtmsg);
     }
@@ -58,7 +52,6 @@ const delPostBoard = async pid => {
     console.error(err);
   }
 };
-
 
 //게시글 수정
 const modifyPostBoard = async (pid, postBoard) => {
@@ -84,10 +77,13 @@ const modifyPostBoard = async (pid, postBoard) => {
 };
 
 //게시글조회 화면
-function displayReadForm(postBoard) {
+async function displayReadForm() {
+  const postBoard = await getPostBoard(pid);
+
   //상태 : 조회 mode-read, 편집 mode-edit
   const changeEditMode = frm => {
     frm.classList.toggle('mode-edit', true);
+    frm.classList.toggle('mode-read', false);
     [...frm.querySelectorAll('input,textarea')]
       .filter(input => !['postId', 'nickname', 'cdate', 'udate'].includes(input.name))
       .forEach(input => input.removeAttribute('readonly'));
@@ -113,7 +109,7 @@ function displayReadForm(postBoard) {
         ele => (postBoard[ele] = formData.get(ele))
       );
 
-      const result = await modifyPostBoard(postBoard.postId, postBoard);
+      const result = await modifyPostBoard(pid, postBoard);
 
       if (result.header.rtcd.startsWith('E')) {
         const details = result.header.details;
@@ -122,7 +118,7 @@ function displayReadForm(postBoard) {
         return;
       }
       const udate = result.body.udate;
-      frm.querySelector('input[name="udate"]').value = udate; //수정
+      frm.querySelector('#udate"]').value = udate; //수정
       changeReadMode(frm); //읽기모드
     };
 
@@ -136,6 +132,7 @@ function displayReadForm(postBoard) {
 
   const changeReadMode = frm => {
     frm.classList.toggle('mode-read', true);
+    frm.classList.toggle('mode-edit', false);
     [...frm.querySelectorAll('input,textarea')]
       .filter(input => input.name !== 'postId')
       .forEach(input => input.setAttribute('readonly', ''));
@@ -205,8 +202,6 @@ function displayReadForm(postBoard) {
 }
 
 
-
-
 //댓글 삭제
 const delPostComment = async (pid, commentId) => {
   try {
@@ -270,6 +265,144 @@ const getPostComment = async (reqPage, reqRec) => {
   }
 };
 
+function displayReadForm() {
+  //상태 : 조회 mode-read, 편집 mode-edit
+  const changeEditModeComment = frm => {
+    frm.classList.toggle('mode-edit-comment', true);
+    const $labels = frm.querySelectorAll('label.comment-content');
+
+    $labels.forEach($label => {
+        const text = $label.textContent;
+
+        // input 요소 생성
+        const $input = document.createElement('input');
+        $input.type = 'text';
+        $input.name = 'content';
+        $input.value = text;
+        $input.classList.add('input-comment');
+
+        // label 교체 → input
+        $label.replaceWith($input);
+      });
+    };
+
+    const $btns = frm.querySelector('.btns');
+    $btns.innerHTML = `
+      <button id="btnSave" type="button">저장</button>
+      <button id="btnCancel" type="button">취소</button>
+    `;
+
+    const $btnSave = $btns.querySelector('#btnSave');
+    const $btnCancel = $btns.querySelector('#btnCancel');
+
+    //저장
+    $btnSave.addEventListener('click', e => {
+      const formData = new FormData(frm); //폼데이터가져오기
+      const product = {};
+
+      [...formData.keys()].forEach(
+        ele => (product[ele] = formData.get(ele)),
+      ); // {pname:'책상', quantitiy:10, price:100 }
+
+      modifyProduct(product.productId, product); //수정
+      getProduct(product.productId); //조회
+      changeReadMode(frm); //읽기모드
+    });
+
+    //취소
+    $btnCancel.addEventListener('click', e => {
+      frm.reset(); //초기화
+      changeReadMode(frm);
+    });
+  };
+
+  const changeReadMode = frm => {
+    frm.classList.toggle('mode-read', true);
+    [...frm.querySelectorAll('input')]
+      .filter(input => input.name !== 'productId')
+      .forEach(input => input.setAttribute('readonly', ''));
+
+    const $btns = frm.querySelector('.btns');
+    $btns.innerHTML = `
+      <button id="btnEdit" type="button">수정</button>
+      <button id="btnDelete" type="button">삭제</button>
+    `;
+
+    const $btnDelete = $btns.querySelector('#btnDelete');
+    const $btnEdit = $btns.querySelector('#btnEdit');
+
+    //수정
+    $btnEdit.addEventListener('click', e => {
+      changeEditMode(frm);
+    });
+
+    //삭제
+    $btnDelete.addEventListener('click', e => {
+      const pid = frm.productId.value;
+      if (!pid) {
+        alert('상품조회 후 삭제바랍니다.');
+        return;
+      }
+
+      if (!confirm('삭제하시겠습니까?')) return;
+      delProduct(pid, frm);
+    });
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //댓글목록 화면
 function displayPostCommentList(postComment) {
 
@@ -282,8 +415,10 @@ function displayPostCommentList(postComment) {
             <td>${postComment.content}</td>
             <td>${postComment.nickname}</td>
             <td>${postComment.cdate}</td>
-            <td>${postComment.udate}</td>
-            <td><span class="field-error client" class="errContent"></span></td>
+            <td>${postComment.udate}</td></tr>
+            <tr>
+            <td><span class="field-error client" id="errCommentSave"></span></td>
+            <td><span class="field-error client" id="errCommentDel"></span></td>
             <td>
               <button class="btnEditComment">수정</button>
               <button class="btnDeleteComment">삭제</button>
@@ -292,8 +427,8 @@ function displayPostCommentList(postComment) {
       .join('');
     return $tr;
   };
-
-  $list.innerHTML = `
+  const $commentFormWrap = document.createElement('div');
+  $commentFormWrap.innerHTML = `
     <table>
       <caption> 게 시 글 목 록 </caption>
       <thead>
@@ -310,13 +445,12 @@ function displayPostCommentList(postComment) {
       </tbody>
     </table>`;
 
-  const $postComment = $list.querySelectorAll('table tbody tr');
+  const $postComment = $commentFormWrap.querySelectorAll('table tbody tr');
   attachCommentHandlers();
 }
 
-const $list = document.createElement('div');
-$list.setAttribute('id','list')
-document.body.appendChild($list);
+$commentFormWrap.setAttribute('id','list')
+document.body.appendChild($commentFormWrap);
 
 const divEle = document.createElement('div');
 divEle.setAttribute('id','reply_pagenation');
@@ -361,16 +495,61 @@ function attachCommentHandlers() {
 
     // 수정 버튼 (예시: prompt로 새 내용 입력)
     $tr.querySelector('.btnEditComment').onclick = async () => {
-      const newContent = prompt('새 댓글 내용을 입력하세요:');
-      if (newContent == null) return; // 취소한 경우
-      const dto = { content: newContent };
-      const result = await modifyPostComment(pid, commentId, dto);
-      if (result && result.header.rtcd === 'S00') {
-        getPostComment(currentPage, recordsPerPage);
-      } else if (result && result.header.rtcd.startsWith('E')) {
+      frm.querySelector('#errCommentSave').textContent = '';
+      frm.querySelector('#errCommentDel').textContent = '';
+
+      const formData = new FormData(frm); //폼데이터가져오기
+      const postBoard = {};
+
+      [...formData.keys()].forEach(
+        ele => (postBoard[ele] = formData.get(ele))
+      );
+
+      const result = await modifyPostBoard(postBoard.postId, postBoard);
+
+      if (result.header.rtcd.startsWith('E')) {
         const details = result.header.details;
-        alert(Object.values(details).join('\n'));
+        if (details.title)  frm.querySelector('#errTitle').textContent   = details.title;
+        if (details.content) frm.querySelector('#errContent').textContent = details.content;
+        return;
       }
+      const udate = result.body.udate;
+      frm.querySelector('input[name="udate"]').value = udate; //수정
+      changeReadMode(frm); //읽기모드
     };
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
