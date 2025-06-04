@@ -204,53 +204,6 @@ function displayReadForm(postBoard) {
   changeReadMode($frm2);
 }
 
-
-
-
-//댓글 삭제
-const delPostComment = async (pid, commentId) => {
-  try {
-    const url = `/api/postBoards/${pid}/postComment/${commentId}`;
-    const result = await ajax.delete(url);
-    console.log(result);
-    if (result.header.rtcd === 'S00') {
-      console.log(result.body);
-      getPostComment(currentPage, recordsPerPage);
-    } else if(result.header.rtcd.substr(0,1) == 'E'){
-        for(let key in result.header.details){
-            console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
-        }
-    } else {
-      alert(result.header.rtmsg);
-    }
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-//댓글 수정
-const modifyPostComment = async (pid,commentId ,postComment) => {
-  try {
-      console.log('modifyPostComment 호출, pid=','cid=', commentId, pid, 'body=', postComment);
-
-    const url = `/api/postBoards/${pid}/postComment/${commentId}`;
-    const result = await ajax.patch(url, postComment);
-    if (result.header.rtcd === 'S00') {
-      console.log(result.body);
-       return result;
-    } else if(result.header.rtcd.substr(0,1) == 'E'){
-        for(let key in result.header.details){
-            console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
-        }
-        return result;
-    } else {
-      alert(result.header.rtmsg);
-    }
-  } catch (err) {
-    console.error(err.message);
-  }
-};
-
 //댓글목록
 const getPostComment = async (reqPage, reqRec) => {
 
@@ -270,6 +223,7 @@ const getPostComment = async (reqPage, reqRec) => {
   }
 };
 
+
 //댓글목록 화면
 function displayPostCommentList(postComment) {
 
@@ -277,17 +231,12 @@ function displayPostCommentList(postComment) {
     const $tr = postComment
       .map(
         postComment =>
-          `<tr data-cid=${postComment.commentId}>
+          `<tr data-pid=${postComment.commentId}>
             <td>${postComment.commentId}</td>
             <td>${postComment.content}</td>
             <td>${postComment.nickname}</td>
             <td>${postComment.cdate}</td>
-            <td>${postComment.udate}</td>
-            <td><span class="field-error client" class="errContent"></span></td>
-            <td>
-              <button class="btnEditComment">수정</button>
-              <button class="btnDeleteComment">삭제</button>
-            </td></tr>`,
+            <td>${postComment.udate}</td></tr>`,
       )
       .join('');
     return $tr;
@@ -311,7 +260,6 @@ function displayPostCommentList(postComment) {
     </table>`;
 
   const $postComment = $list.querySelectorAll('table tbody tr');
-  attachCommentHandlers();
 }
 
 const $list = document.createElement('div');
@@ -348,29 +296,3 @@ async function configPagination(){
   }
 }
 
-// 버튼 클릭 핸들러 연결 함수
-function attachCommentHandlers() {
-  document.querySelectorAll('#list tbody tr').forEach($tr => {
-    const commentId = $tr.dataset.cid;
-
-    // 삭제 버튼
-    $tr.querySelector('.btnDeleteComment').onclick = () => {
-      if (!confirm('댓글을 정말 삭제하시겠습니까?')) return;
-      delPostComment(pid, commentId);
-    };
-
-    // 수정 버튼 (예시: prompt로 새 내용 입력)
-    $tr.querySelector('.btnEditComment').onclick = async () => {
-      const newContent = prompt('새 댓글 내용을 입력하세요:');
-      if (newContent == null) return; // 취소한 경우
-      const dto = { content: newContent };
-      const result = await modifyPostComment(pid, commentId, dto);
-      if (result && result.header.rtcd === 'S00') {
-        getPostComment(currentPage, recordsPerPage);
-      } else if (result && result.header.rtcd.startsWith('E')) {
-        const details = result.header.details;
-        alert(Object.values(details).join('\n'));
-      }
-    };
-  });
-}

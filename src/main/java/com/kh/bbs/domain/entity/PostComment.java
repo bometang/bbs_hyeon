@@ -1,5 +1,6 @@
 package com.kh.bbs.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,8 @@ public class PostComment {
   private Long memberId;          //게시글 코드
   private String nickname;
   private String codeId;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM-dd HH:mm:ss")
   private LocalDateTime cdate;    //게시글 등록시간
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM-dd HH:mm:ss")
   private LocalDateTime udate;    //게시글 수정시간
 }

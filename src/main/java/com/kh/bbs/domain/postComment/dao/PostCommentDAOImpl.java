@@ -171,8 +171,12 @@ public class PostCommentDAOImpl implements PostCommentDAO{
   @Override
   public int deleteById(Long id) {
     StringBuffer sql = new StringBuffer();
-    sql.append("UPDATE post_comment ");
-    sql.append("   SET content = '삭제된 댓글입니다.', udate = SYSTIMESTAMP ");
+//    sql.append("UPDATE post_comment ");
+//    sql.append("   SET content = '삭제된 댓글입니다.', udate = SYSTIMESTAMP ");
+//    sql.append(" WHERE comment_id = :commentId ");
+
+    sql.append("DELETE  ");
+    sql.append("FROM post_comment   ");
     sql.append(" WHERE comment_id = :commentId ");
 
     //수동매핑

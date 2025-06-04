@@ -77,6 +77,7 @@ public class ApiPostBoardsController {
     //2) 게시글수정
     PostBoards postBoard = new PostBoards();
     BeanUtils.copyProperties(updateApi, postBoard);
+    postBoard.setPostId(id);
     int updatedRow = postBoardsSVC.updateById(id, postBoard);
 
     //3) 수정된게시글 조회
