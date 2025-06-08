@@ -1,13 +1,14 @@
 import { ajax,  PaginationUI} from '/js/common.js';
-//<script src="/js/main.js" defer></script>
-const board = document.querySelector(".board");     //게시판 클래스명으로 객체 가져오기
-const pid = board.id;                               //id 추출로 게시판 아이디 저장
-
 let currentPage = 1; // 현재 페이지를 위한 전역 변수
 let initialPage = 1; // 게시글 추가 후 이동할 페이지 (1페이지)
 
 const recordsPerPage = 10;        // 페이지당 레코드수
 const pagesPerPage = 5;          // 한페이지당 페이지수
+
+const board = document.querySelector(".board");     //게시판 클래스명으로 객체 가져오기
+const pid = board.id;                               //id 추출로 게시판 아이디 저장
+
+
 
 //게시글 조회
 const getPostBoard = async pid => {
@@ -16,7 +17,7 @@ const getPostBoard = async pid => {
     const result = await ajax.get(url);
     console.log(result);
     if (result.header.rtcd === 'S00') {
-        return result.body;
+      return result.body;
 
     } else if(result.header.rtcd.substr(0,1) == 'E'){
         for(let key in result.header.details){
@@ -29,6 +30,7 @@ const getPostBoard = async pid => {
   } catch (err) {
     console.error(err);
   }
+  return null;
 };
 
 //게시글 삭제
@@ -51,13 +53,13 @@ const delPostBoard = async pid => {
   } catch (err) {
     console.error(err);
   }
+  return null;
 };
 
 //게시글 수정
 const modifyPostBoard = async (pid, postBoard) => {
   try {
-      console.log('modifyPostBoard 호출, pid=', pid, 'body=', postBoard);
-
+    console.log('modifyPostBoard 호출, pid=', pid, 'body=', postBoard);
     const url = `/api/postBoards/${pid}`;
     const result = await ajax.patch(url, postBoard);
     if (result.header.rtcd === 'S00') {
@@ -79,7 +81,6 @@ const modifyPostBoard = async (pid, postBoard) => {
 //게시글조회 화면
 async function displayReadForm() {
   const postBoard = await getPostBoard(pid);
-
   //상태 : 조회 mode-read, 편집 mode-edit
   const changeEditMode = frm => {
     frm.classList.toggle('mode-edit', true);
@@ -109,7 +110,7 @@ async function displayReadForm() {
         ele => (postBoard[ele] = formData.get(ele))
       );
 
-      const result = await modifyPostBoard(pid, postBoard);
+      const result = await modifyPostBoard(postBoard.postId, postBoard);
 
       if (result.header.rtcd.startsWith('E')) {
         const details = result.header.details;
@@ -118,7 +119,7 @@ async function displayReadForm() {
         return;
       }
       const udate = result.body.udate;
-      frm.querySelector('#udate"]').value = udate; //수정
+      frm.querySelector('input[name="udate"]').value = udate; //수정
       changeReadMode(frm); //읽기모드
     };
 
@@ -134,7 +135,7 @@ async function displayReadForm() {
     frm.classList.toggle('mode-read', true);
     frm.classList.toggle('mode-edit', false);
     [...frm.querySelectorAll('input,textarea')]
-      .filter(input => input.name !== 'postId')
+      .filter(input => !['postId', 'nickname', 'cdate', 'udate'].includes(input.name))
       .forEach(input => input.setAttribute('readonly', ''));
 
     const $btns = frm.querySelector('.btns');
@@ -153,7 +154,7 @@ async function displayReadForm() {
     $btnDelete.onclick = ()  => {
       const pid = frm.postId.value;
       if (!pid) {
-        alert('상품조회 후 삭제바랍니다.');
+        alert('게시글조회 후 삭제바랍니다.');
         return;
       }
 
@@ -162,7 +163,6 @@ async function displayReadForm() {
     };
   };
 
-  const $readFormWrap = document.createElement('div');
   $readFormWrap.innerHTML = `
     <form id="frm2">
 
@@ -172,7 +172,7 @@ async function displayReadForm() {
       </div>
       <div>
           <label for="title">제목</label>
-          <input type="text" id="title" name="title" value="${postBoard.title}"/>
+          <input type="text" id="title" name="title" value="${postBoard.title}" readonly/>
           <span class="field-error client" id="errTitle"></span>
       </div>
       <div>
@@ -189,21 +189,71 @@ async function displayReadForm() {
       </div>
       <div>
           <label for="content">내용</label>
-          <textarea id="content" name="content">${postBoard.content}</textarea>
+          <textarea id="content" name="content" readonly>${postBoard.content}</textarea>
           <span class="field-error client" id="errContent"></span>
       </div>
       <div class='btns'></div>
 
     </form>
   `;
-  document.body.insertAdjacentElement('afterbegin', $readFormWrap);
   const $frm2 = $readFormWrap.querySelector('#frm2');
   changeReadMode($frm2);
 }
+const $readFormWrap = document.createElement('div');
+document.body.appendChild($readFormWrap);
+displayReadForm();
 
-///////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
+//게시글 조회
+const getPostComment = async (pid,commentId) => {
+  try {
+    const url = `/api/postBoards/${pid}/postComment/${commentId}`;
+    const result = await ajax.get(url);
+    console.log(result);
+    if (result.header.rtcd === 'S00') {
+      return result.body;
 
+    } else if(result.header.rtcd.substr(0,1) == 'E'){
+        for(let key in result.header.details){
+            console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
+        }
+        return result.header.details;
+    } else {
+      alert(result.header.rtmsg);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  return null;
+};
+
+//댓글 저장
+const addPostComment = async (frm,comment) => {
+  try {
+    const url = `/api/postBoards/${pid}/postComment`;
+    const result = await ajax.post(url,comment);
+    console.log(result);
+    if (result.header.rtcd === 'S00') {
+      console.log(result.body);
+      frm.reset();
+      initialPage = 1; // 생성 후 1페이지로 이동
+      getPostCommentList(initialPage, recordsPerPage); // 첫 페이지의 기본 레코드로 호출
+      configPagination();
+    } else if(result.header.rtcd.substr(0,1) == 'E'){
+        for(let key in result.header.details){
+            console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
+        }
+    } else {
+      alert(result.header.rtmsg);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 //댓글 삭제
 const delPostComment = async (pid, commentId) => {
@@ -213,7 +263,7 @@ const delPostComment = async (pid, commentId) => {
     console.log(result);
     if (result.header.rtcd === 'S00') {
       console.log(result.body);
-      getPostComment(currentPage, recordsPerPage);
+      getPostCommentList(currentPage, recordsPerPage);
     } else if(result.header.rtcd.substr(0,1) == 'E'){
         for(let key in result.header.details){
             console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
@@ -250,13 +300,20 @@ const modifyPostComment = async (pid,commentId ,postComment) => {
 };
 
 //댓글목록
-const getPostComment = async (reqPage, reqRec) => {
+const getPostCommentList = async (reqPage, reqRec) => {
 
   try {
     const url = `/api/postBoards/${pid}/postComment/paging?pageNo=${reqPage}&numOfRows=${reqRec}`;
     const result = await ajax.get(url);
 
     if (result.header.rtcd === 'S00') {
+      const comments = result.body.comments;
+
+    // 빈 페이지라면 이전 페이지로 한 번만 재귀 호출
+    if (comments.length === 0 && reqPage > 1) {
+      return getPostCommentList(reqPage - 1, reqRec);
+    }
+
       currentPage = reqPage; // 현재 페이지 업데이트
       displayPostCommentList(result.body);
 
@@ -268,58 +325,66 @@ const getPostComment = async (reqPage, reqRec) => {
   }
 };
 
-//댓글목록 화면
-function displayPostCommentList(postComment) {
+async function configPagination(){
+  const url = `/api/postBoards/${pid}/postComment/totCnt`;
+  try {
+    const result = await ajax.get(url);
 
-  //상태 : 조회 mode-read, 편집 mode-edit
-  const changeEditModeComment = frm => {
-    frm.classList.toggle('mode-edit-Comment', true);
-    frm.classList.toggle('mode-read-Comment', false);
-    [...frm.querySelectorAll('input,textarea')]
-      .filter(input => !['postId', 'nickname', 'cdate', 'udate'].includes(input.name))
-      .forEach(input => input.removeAttribute('readonly'));
+    const totalRecords = result.body.totCnt; // 전체 레코드수
 
-    const $btns = frm.querySelector('.btns');
-    $btns.innerHTML = `
-      <button id="btnSave" type="button">저장</button>
-      <button id="btnCancel" type="button">취소</button>
-    `;
-
-    const $btnSave = $btns.querySelector('#btnSave');
-    const $btnCancel = $btns.querySelector('#btnCancel');
-
-    //저장
-    $btnSave.onclick = async e => {
-      frm.querySelector('#errTitle').textContent = '';
-      frm.querySelector('#errContent').textContent = '';
-
-      const formData = new FormData(frm); //폼데이터가져오기
-      const postBoard = {};
-
-      [...formData.keys()].forEach(
-        ele => (postBoard[ele] = formData.get(ele))
-      );
-
-      const result = await modifyPostBoard(pid, postBoard);
-
-      if (result.header.rtcd.startsWith('E')) {
-        const details = result.header.details;
-        if (details.title)  frm.querySelector('#errTitle').textContent   = details.title;
-        if (details.content) frm.querySelector('#errContent').textContent = details.content;
-        return;
-      }
-      const udate = result.body.udate;
-      frm.querySelector('#udate"]').value = udate; //수정
-      changeReadMode(frm); //읽기모드
+    const handlePageChange = (reqPage)=>{
+      return getPostCommentList(reqPage,recordsPerPage);
     };
 
-    //취소
-    $btnCancel.addEventListener('click', e => {
-      frm.reset(); //초기화
-      changeReadMode(frm);
-    });
-  };
+    // Pagination UI 초기화
+    var pagination = new PaginationUI('reply_pagenation', handlePageChange);
 
+    pagination.setTotalRecords(totalRecords);       //총건수
+    pagination.setRecordsPerPage(recordsPerPage);   //한페이지당 레코드수
+    pagination.setPagesPerPage(pagesPerPage);       //한페이지당 페이지수
+
+    // 첫페이지 가져오기
+    pagination.handleFirstClick();
+
+  }catch(err){
+    console.error(err);
+  }
+}
+
+//댓글목록 화면
+function displayPostCommentList() {
+  //상태 : 조회 mode-commend-read, 편집 mode-commend-edit
+  const changeCommentEditMode = (commendId, content) => {
+    const $tr = document.querySelector(`tr[data-cid="${commendId}"]`);
+    const $tdContent = $tr.children[1];
+    $tdContent.innerHTML = `
+      <textarea>${content}</textarea>
+    `;
+    $tr.classList.toggle('mode-commend-edit', true);
+    $tr.classList.toggle('mode-commend-read', false);
+
+    const $btnCell = document.querySelector(`tr[data-cid="${commentId}"] .commentBtns`);
+    $btnCell.innerHTML = `
+      <button id="CommentBtnSave" type="button">저장</button>
+      <button id="CommentBtnCancel" type="button">취소</button>
+    `;
+    }
+
+  const changeCommentReadMode = (commendId, content) => {
+    const $tr = document.querySelector(`tr[data-cid="${commendId}"]`);
+    const $tdContent = $tr.children[1];
+    $tdContent.innerHTML = `
+      ${postComment.content}
+    `;
+    $tr.classList.toggle('mode-commend-edit', false);
+    $tr.classList.toggle('mode-commend-read', true);
+
+    const $btnCell = document.querySelector(`tr[data-cid="${commentId}"] .commentBtns`);
+    $btnCell.innerHTML = `
+      <button id="CommentBtnEdit" type="button">수정</button>
+      <button id="CommentBtnDel" type="button">삭제</button>
+    `;
+    }
 
 
 
@@ -362,6 +427,69 @@ function displayPostCommentList(postComment) {
       </tbody>
     </table>`;
 
-  const $postComment = $list.querySelectorAll('table tbody tr');
-  attachCommentHandlers();
-}
+
+
+
+
+    const $btnSave = $btns.querySelector('#btnSave');
+    const $btnCancel = $btns.querySelector('#btnCancel');
+
+    //저장
+    $btnSave.onclick = async e => {
+      frm.querySelector('#errTitle').textContent = '';
+      frm.querySelector('#errContent').textContent = '';
+
+      const formData = new FormData(frm); //폼데이터가져오기
+      const postBoard = {};
+
+      [...formData.keys()].forEach(
+        ele => (postBoard[ele] = formData.get(ele))
+      );
+
+      const result = await modifyPostBoard(postBoard.postId, postBoard);
+
+      if (result.header.rtcd.startsWith('E')) {
+        const details = result.header.details;
+        if (details.title)  frm.querySelector('#errTitle').textContent   = details.title;
+        if (details.content) frm.querySelector('#errContent').textContent = details.content;
+        return;
+      }
+      const udate = result.body.udate;
+      frm.querySelector('input[name="udate"]').value = udate; //수정
+      changeReadMode(frm); //읽기모드
+    };
+
+    //취소
+    $btnCancel.addEventListener('click', e => {
+      frm.reset(); //초기화
+      changeReadMode(frm);
+    });
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

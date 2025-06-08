@@ -283,7 +283,7 @@ function displayPostCommentList(postComment) {
             <td>${postComment.nickname}</td>
             <td>${postComment.cdate}</td>
             <td>${postComment.udate}</td>
-            <td><span class="field-error client" class="errContent"></span></td>
+            <td><span class="field-error client errContent"></span></td>
             <td>
               <button class="btnEditComment">수정</button>
               <button class="btnDeleteComment">삭제</button>
@@ -311,11 +311,10 @@ function displayPostCommentList(postComment) {
     </table>`;
 
   const $postComment = $list.querySelectorAll('table tbody tr');
-  attachCommentHandlers();
 }
 
 const $list = document.createElement('div');
-$list.setAttribute('id','list')
+$list.setAttribute('id','list');
 document.body.appendChild($list);
 
 const divEle = document.createElement('div');
