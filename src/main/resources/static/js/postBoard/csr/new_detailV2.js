@@ -219,6 +219,7 @@ document.body.appendChild(divEle);
 
 //게시글 조회
 const getPostComment = async (pid,commentId) => {
+  console.log('pid:', pid, 'cid:', commentId);
   try {
     const url = `/api/postBoards/${pid}/postComment/${commentId}`;
     const result = await ajax.get(url);
@@ -291,8 +292,7 @@ const delPostComment = async (pid, commentId) => {
 //댓글 수정
 const modifyPostComment = async (pid,commentId ,content) => {
   try {
-      console.log('modifyPostComment 호출, pid=', commentId,'cid=', pid, 'body=', content);
-
+    console.log('modifyPostComment 호출, pid=', commentId,'cid=', pid, 'body=', content);
     const url = `/api/postBoards/${pid}/postComment/${commentId}`;
     const result = await ajax.patch(url, { content });
     if (result.header.rtcd === 'S00') {
@@ -302,6 +302,7 @@ const modifyPostComment = async (pid,commentId ,content) => {
         for(let key in result.header.details){
             console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
         }
+        console.log(result.header);
         return result;
     } else {
       alert(result.header.rtmsg);
@@ -366,6 +367,7 @@ async function displayPostCommentList(postComments) {
     const $row       = $list.querySelector(`tr[data-cid="${cid}"]`);
     const $btnCell   = $row.querySelector('.commentBtns');
     const $contentTd = $row.previousElementSibling.children[1];
+    const $udateTd = $row.previousElementSibling.children[4];
 
     $contentTd.innerHTML =
       `<textarea id="editContent-${cid}" rows="3" style="width:98%;">${data.content}</textarea>`;
@@ -377,11 +379,14 @@ async function displayPostCommentList(postComments) {
     $btnCell.querySelector('.btnSaveComment').onclick = async () => {
       const newVal = $contentTd.querySelector('textarea').value.trim();
       const res = await modifyPostComment(pid, cid, newVal);
+
       if (res.header.rtcd.startsWith('E')) {
-        document.querySelector(`#errContent-${cid}`).textContent =
-          res.header.details.content ?? '';
+        const details = res.header.details;
+        if (details.content)  document.querySelector(`#errContent-${cid}`).textContent   = details.content;
         return;
       }
+      const udate = res.body.udate;
+      $udateTd.value=udate;
       changeCommentReadMode(cid);
     };
 

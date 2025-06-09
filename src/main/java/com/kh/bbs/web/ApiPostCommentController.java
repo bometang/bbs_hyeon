@@ -248,4 +248,19 @@ public class ApiPostCommentController {
 
     return ResponseEntity.ok(postCommentApiResponse);  //상태코드 200, 응답메세지Body:postCommentApiResponse객채가 json포맷 문자열로 변환됨
   }
+
+  @GetMapping("/{id}")
+//  @ResponseBody
+  public  ResponseEntity<ApiResponse<PostComment>> findById(
+      @PathVariable("postId") Long postId,
+      @PathVariable("id") Long id
+  ) {
+    Optional<PostComment> optionalPostComment = postCommentSVC.findById(id);
+    PostComment findedPostComment = optionalPostComment.orElseThrow();  // 찾고자하는 게시글이 없으면 NoSuchElementException 예외발생
+
+    ApiResponse<PostComment> postCommentApiResponse = ApiResponse.of(ApiResponseCode.SUCCESS, findedPostComment);
+
+    return ResponseEntity.ok(postCommentApiResponse);
+  }
+
 }
