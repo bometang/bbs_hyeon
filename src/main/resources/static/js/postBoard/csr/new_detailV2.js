@@ -208,6 +208,15 @@ displayReadForm();
 //////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
 
+
+const $list = document.createElement('div');
+document.body.appendChild($list);
+
+const divEle = document.createElement('div');
+divEle.setAttribute('id','reply_pagenation');
+document.body.appendChild(divEle);
+
+
 //게시글 조회
 const getPostComment = async (pid,commentId) => {
   try {
@@ -215,12 +224,14 @@ const getPostComment = async (pid,commentId) => {
     const result = await ajax.get(url);
     console.log(result);
     if (result.header.rtcd === 'S00') {
+      console.log('pid:', pid, 'cid:', commentId);
       return result.body;
 
     } else if(result.header.rtcd.substr(0,1) == 'E'){
         for(let key in result.header.details){
             console.log(`필드명:${key}, 오류:${result.header.details[key]}`);
         }
+        console.log('pid:aa');
         return result.header.details;
     } else {
       alert(result.header.rtmsg);
@@ -228,6 +239,7 @@ const getPostComment = async (pid,commentId) => {
   } catch (err) {
     console.error(err);
   }
+  console.log('pid:az');
   return null;
 };
 
@@ -277,12 +289,12 @@ const delPostComment = async (pid, commentId) => {
 };
 
 //댓글 수정
-const modifyPostComment = async (pid,commentId ,postComment) => {
+const modifyPostComment = async (pid,commentId ,content) => {
   try {
-      console.log('modifyPostComment 호출, pid=','cid=', commentId, pid, 'body=', postComment);
+      console.log('modifyPostComment 호출, pid=', commentId,'cid=', pid, 'body=', content);
 
     const url = `/api/postBoards/${pid}/postComment/${commentId}`;
-    const result = await ajax.patch(url, postComment);
+    const result = await ajax.patch(url, { content });
     if (result.header.rtcd === 'S00') {
       console.log(result.body);
        return result;
@@ -307,13 +319,6 @@ const getPostCommentList = async (reqPage, reqRec) => {
     const result = await ajax.get(url);
 
     if (result.header.rtcd === 'S00') {
-      const comments = result.body.comments;
-
-    // 빈 페이지라면 이전 페이지로 한 번만 재귀 호출
-    if (comments.length === 0 && reqPage > 1) {
-      return getPostCommentList(reqPage - 1, reqRec);
-    }
-
       currentPage = reqPage; // 현재 페이지 업데이트
       displayPostCommentList(result.body);
 
@@ -330,7 +335,7 @@ async function configPagination(){
   try {
     const result = await ajax.get(url);
 
-    const totalRecords = result.body.totCnt; // 전체 레코드수
+    const totalRecords = result.body; // 전체 레코드수
 
     const handlePageChange = (reqPage)=>{
       return getPostCommentList(reqPage,recordsPerPage);
@@ -352,88 +357,61 @@ async function configPagination(){
 }
 
 //댓글목록 화면
-async function displayPostCommentList() {
-//  const postComment = await getPostCommentList();
-  //상태 : 조회 mode-comment-read, 편집 mode-comment-edit
-  const changeCommentEditMode = async commentId => {
-    const postComment = await getPostComment(pid,commentId);
-    const $tr = document.querySelector(`tr[data-cid="${commentId}"]`);
-    const $tdContent = $tr.children[1];
-    $tdContent.innerHTML = `
-      <textarea  id="editComment">${postComment.content}</textarea>
-    `;
-    $tr.classList.toggle('mode-comment-edit', true);
-    $tr.classList.toggle('mode-comment-read', false);
+async function displayPostCommentList(postComments) {
 
-    const $btnCell = document.querySelector(`tr[data-cid="${commentId}"] .commentBtns`);
+  const changeCommentEditMode = async cid => {
+
+    const data = await getPostComment(pid, cid);
+    console.log('[댓글 데이터 조회 완료]', data);
+    const $row       = $list.querySelector(`tr[data-cid="${cid}"]`);
+    const $btnCell   = $row.querySelector('.commentBtns');
+    const $contentTd = $row.previousElementSibling.children[1];
+
+    $contentTd.innerHTML =
+      `<textarea id="editContent-${cid}" rows="3" style="width:98%;">${data.content}</textarea>`;
+
     $btnCell.innerHTML = `
-      <button id="CommentBtnSave-${commentId}" type="button">저장</button>
-      <button id="CommentBtnCancel-${commentId}" type="button">취소</button>
-    `;
+      <button type="button" class="btnSaveComment">저장</button>
+      <button type="button" class="btnCancelComment">취소</button>`;
 
-    const $CommentBtnSave = $btnCell.querySelector(`#CommentBtnSave-${commentId}`);
-    const $CommentBtnCancel = $btnCell.querySelector(`#CommentBtnCancel-${commentId}`);
-
-    //저장
-    $CommentBtnSave.onclick = async e => {
-      document.querySelector(`#errContent-${commentId}`).textContent = '';
-      const newContent = document.querySelector('#editComment').value;
-      const result = await modifyPostComment(pid, commentId,newContent);
-
-      if (result.header.rtcd.startsWith('E')) {
-        const details = result.header.details;
-        if (details.content) frm.querySelector('#errContent').textContent = details.content;
+    $btnCell.querySelector('.btnSaveComment').onclick = async () => {
+      const newVal = $contentTd.querySelector('textarea').value.trim();
+      const res = await modifyPostComment(pid, cid, newVal);
+      if (res.header.rtcd.startsWith('E')) {
+        document.querySelector(`#errContent-${cid}`).textContent =
+          res.header.details.content ?? '';
         return;
       }
-      const udate = result.body.udate;
-      frm.querySelector('input[name="udate"]').value = udate; //수정
-      changeCommentReadMode(commentId); //읽기모드
+      changeCommentReadMode(cid);
     };
 
-    //취소
-    $CommentBtnCancel.onclick = () => {
-      changeCommentReadMode(commentId);
-    };
-  }
+    $btnCell.querySelector('.btnCancelComment').onclick =
+      () => changeCommentReadMode(cid);
+  };
 
-  const changeCommentReadMode = async commentId => {
-    const postComment = await getPostComment(pid,commentId);
-    const $tr = document.querySelector(`tr[data-cid="${commentId}"]`);
-    const $tdContent = $tr.children[1];
-    $tdContent.innerHTML = `
-      ${postComment.content}
-    `;
-    $tr.classList.toggle('mode-comment-edit', false);
-    $tr.classList.toggle('mode-comment-read', true);
+  const changeCommentReadMode = async cid => {
+    const data = await getPostComment(pid, cid);
+    const $row       = $list.querySelector(`tr[data-cid="${cid}"]`);
+    const $btnCell   = $row.querySelector('.commentBtns');
+    const $contentTd = $row.previousElementSibling.children[1];
 
-    const $btnCell = document.querySelector(`tr[data-cid="${commentId}"] .commentBtns`);
+    $contentTd.textContent = data.content;
+
     $btnCell.innerHTML = `
-      <button id="CommentBtnEdit-${commentId}" type="button">수정</button>
-      <button id="CommentBtnDel-${commentId}" type="button">삭제</button>
-    `;
+      <button type="button" class="btnEditComment">수정</button>
+      <button type="button" class="btnDeleteComment">삭제</button>`;
 
-    const $btnDelete = $btnCell.querySelector(`#CommentBtnDel-${commentId}`);
-    const $btnEdit = $btnCell.querySelector(`#CommentBtnEdit-${commentId}`);
-
-    //수정
-    $btnEdit.onclick = () => changeCommentEditMode(commentId);
-
-    //삭제
-    $btnDelete.onclick = ()  => {
-      if (!commentId) {
-        alert('게시글조회 후 삭제바랍니다.');
-        return;
-      }
-
-      if (!confirm('삭제하시겠습니까?')) return;
-      delPostComment(pid,commentId);
-    };
-  }
+    $btnCell.querySelector('.btnEditComment').onclick  = () => changeCommentEditMode(cid);
+    $btnCell.querySelector('.btnDeleteComment').onclick =
+      () => { if (confirm('삭제하시겠습니까?')) delPostComment(pid, cid); };
+  };
 
 
 
-  const makeTr = postComment => {
-    const $tr = postComment
+
+
+  const makeTr = postComments => {
+    const $tr = postComments
       .map(
         postComment =>
           `<tr id="comment-${postComment.commentId}">
@@ -467,18 +445,26 @@ async function displayPostCommentList() {
         </tr>
       </thead>
       <tbody>
-        ${makeTr(postComment)}
+        ${makeTr(postComments)}
       </tbody>
     </table>`;
 
-  };
+  const $editBtns = $list.querySelectorAll('.btnEditComment');
+  const $delBtns  = $list.querySelectorAll('.btnDeleteComment');
 
-const $list = document.createElement('div');
-document.body.appendChild($list);
-displayPostCommentList();
+  $editBtns.forEach(btn =>
+    btn.onclick = e => {
+      const cid = e.target.closest('tr[data-cid]').dataset.cid;
+      changeCommentEditMode(cid);
+    });
 
-
-
+  $delBtns.forEach(btn =>
+    btn.onclick = e => {
+      const cid = e.target.closest('tr[data-cid]').dataset.cid;
+      if (confirm('삭제하시겠습니까?')) delPostComment(pid, cid);
+    });
+};
+configPagination();
 
 
 

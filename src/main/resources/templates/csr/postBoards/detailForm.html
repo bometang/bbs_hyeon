@@ -5,15 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>게시글 (CSR)</title>
-  <script type="module" src="/js/postBoard/csr/detailForm.js"></script>
+  <script type="module" src="/js/postBoard/csr/new_detailV2.js"></script>
 </head>
 <body>
-<input type="hidden" id="rawPostId" th:value="${postId}" />
-  <hr>
-  <div id="commentWrite">
-    <textarea id="newComment" placeholder="댓글을 입력하세요"></textarea>
-    <button id="btnPostComment" type="button">등록</button>
-  </div>
-  <div id="commentList"> </div>
+  <div class="board" th:id="${postId}">게시</div>
 </body>
 </html>
