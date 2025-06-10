@@ -135,7 +135,7 @@ public class PostCommentDAOImpl implements PostCommentDAO{
   @Override
   public Optional<PostComment> findById(Long id) {
     StringBuffer sql = new StringBuffer();
-    sql.append("SELECT comment_id,post_id,parent_id,DEPTH,content,member_id,code_id,cdate ");
+    sql.append("SELECT comment_id,post_id,parent_id,DEPTH,content,member_id,code_id,cdate,udate ");
     sql.append("FROM POST_COMMENT ");
     sql.append("WHERE comment_id= :id ");
 

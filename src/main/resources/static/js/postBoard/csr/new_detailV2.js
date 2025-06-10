@@ -386,12 +386,17 @@ async function displayPostCommentList(postComments) {
         return;
       }
       const udate = res.body.udate;
-      $udateTd.value=udate;
+      $udateTd.textContent=udate;
+      document.querySelector(`#errContent-${cid}`).textContent = '';
       changeCommentReadMode(cid);
     };
 
+
     $btnCell.querySelector('.btnCancelComment').onclick =
-      () => changeCommentReadMode(cid);
+      () => {
+      document.querySelector(`#errContent-${cid}`).textContent = '';
+      changeCommentReadMode(cid);
+      };
   };
 
   const changeCommentReadMode = async cid => {
