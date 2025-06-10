@@ -120,18 +120,22 @@ async function displayReadForm() {
       }
       const udate = result.body.udate;
       frm.querySelector('input[name="udate"]').value = udate; //수정
+      frm.querySelector('#errTitle').textContent   ='';
+      frm.querySelector('#errContent').textContent = '';
       changeReadMode(frm); //읽기모드
     };
 
     //취소
     $btnCancel.addEventListener('click', e => {
+      frm.querySelector('#errTitle').textContent   ='';
+      frm.querySelector('#errContent').textContent = '';
       frm.reset(); //초기화
       changeReadMode(frm);
     });
   };
 
 
-  const changeReadMode = frm => {
+  async const changeReadMode = frm => {
     frm.classList.toggle('mode-read', true);
     frm.classList.toggle('mode-edit', false);
     [...frm.querySelectorAll('input,textarea')]

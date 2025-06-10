@@ -116,7 +116,7 @@ public class PostBoardsDAOImpl implements PostBoardsDAO {
   @Override
   public Optional<PostBoards> findById(Long id) {
     StringBuffer sql = new StringBuffer();
-    sql.append("SELECT post_id,title, m.nickname AS nickname, p.cdate AS cdate, p.udate AS udate, content, p.code_id AS code_id ");
+    sql.append("SELECT p.member_id, post_id,title, m.nickname AS nickname, p.cdate AS cdate, p.udate AS udate, content, p.code_id AS code_id ");
     sql.append("FROM postBoard p ");
     sql.append("JOIN MEMBER m ON p.member_id = m.member_id ");
     sql.append("WHERE p.POST_ID= :id ");

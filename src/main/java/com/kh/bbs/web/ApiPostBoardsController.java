@@ -6,6 +6,8 @@ import com.kh.bbs.web.api.ApiResponse;
 import com.kh.bbs.web.api.ApiResponseCode;
 import com.kh.bbs.web.api.postBoard.SaveApi;
 import com.kh.bbs.web.api.postBoard.UpdateApi;
+import com.kh.bbs.web.form.login.LoginMember;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -65,7 +68,8 @@ public class ApiPostBoardsController {
   @PatchMapping("/{id}")
   public ResponseEntity<ApiResponse<PostBoards>> updateById(
       @PathVariable("id") Long id,
-      @RequestBody @Valid UpdateApi updateApi // 요청메세지의 json포맷의 문자열을 자바 객체로 변환
+      @RequestBody @Valid UpdateApi updateApi, // 요청메세지의 json포맷의 문자열을 자바 객체로 변환
+      HttpSession session
   ) {
 
     //1) 게시글조회
@@ -74,31 +78,67 @@ public class ApiPostBoardsController {
         ()->new NoSuchElementException("게시글번호 : " + id + " 를 찾을 수 없습니다.")
     );  // 찾고자하는 게시글이 없으면 NoSuchElementException 예외발생
 
-    //2) 게시글수정
+    // 2) 로그인 정보 꺼내기
+    LoginMember loginMember = (LoginMember) session.getAttribute("loginMember");
+    if (loginMember == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+    }
+
+    Long loginMemberId = loginMember.getMemberId();
+    log.info("loginMemberId = {}", loginMemberId);
+    // 3) 작성자 확인
+    boolean isAuthor    = findedpostBoards.getMemberId().equals(loginMemberId);
+    if (!isAuthor) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 댓글을 수정할 수 있습니다.");
+    }
+
+    //4) 게시글수정
     PostBoards postBoard = new PostBoards();
     BeanUtils.copyProperties(updateApi, postBoard);
     postBoard.setPostId(id);
     int updatedRow = postBoardsSVC.updateById(id, postBoard);
 
-    //3) 수정된게시글 조회
+
+    //5) 수정된게시글 조회
     optionalPostBoards = postBoardsSVC.findById(id);
     PostBoards updatedPostBoard = optionalPostBoards.orElseThrow();
 
-    //4) REST API 응답 표준 메시지 생성
+    //6) REST API 응답 표준 메시지 생성
     ApiResponse<PostBoards> postBoardApiResponse = ApiResponse.of(ApiResponseCode.SUCCESS, updatedPostBoard);
 
-    //5) HTTP 응답 메세지 생성
+    //7) HTTP 응답 메세지 생성
     return ResponseEntity.ok(postBoardApiResponse);
   }
 
   //게시글 삭제      //   DELETE  /postBoards/{id} =>  DELETE http://localhost:9080/api/postBoards/{id}
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<PostBoards>> deleteById(@PathVariable("id") Long id) {
+  public ResponseEntity<ApiResponse<PostBoards>> deleteById(
+      @PathVariable("id") Long id,
+      HttpSession session
+      ) {
     //1) 게시글조회
     Optional<PostBoards> optionalPostBoards = postBoardsSVC.findById(id);
     PostBoards findedPostBoards = optionalPostBoards.orElseThrow(
         ()->new NoSuchElementException("게시글번호 : " + id + " 를 찾을 수 없습니다.")
     );  // 찾고자하는 게시글이 없으면 NoSuchElementException 예외발생
+
+    // 2) 로그인 정보 꺼내기
+    LoginMember loginMember = (LoginMember) session.getAttribute("loginMember");
+    if (loginMember == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+    }
+
+    Long loginMemberId = loginMember.getMemberId();
+
+    // 3) 작성자 확인
+    boolean isAuthor    = findedPostBoards.getMemberId().equals(loginMemberId);
+
+    if (!isAuthor) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 댓글을 수정할 수 있습니다.");
+    }
+
+
+
 
     //2) 게시글 삭제
     int deletedRow = postBoardsSVC.deleteById(id);
