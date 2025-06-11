@@ -20,4 +20,7 @@ dialog {
   border-radius: 5%;
   border-width:0;
   background-color: yellow;
-}  
+}
+textarea {
+  font-family: inherit;
+}

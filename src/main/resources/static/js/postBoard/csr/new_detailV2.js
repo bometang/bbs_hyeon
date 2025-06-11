@@ -74,6 +74,7 @@ const modifyPostBoard = async (pid, postBoard) => {
       alert(result.header.rtmsg);
     }
   } catch (err) {
+    console.log("수정 오류")
     console.error(err.message);
   }
 };
@@ -126,16 +127,19 @@ async function displayReadForm() {
     };
 
     //취소
-    $btnCancel.addEventListener('click', e => {
+    $btnCancel.onclick = async e => {
+      const postBoard = await getPostBoard(pid);
       frm.querySelector('#errTitle').textContent   ='';
       frm.querySelector('#errContent').textContent = '';
       frm.reset(); //초기화
+      console.log(postBoard.udate);
+      frm.querySelector('input[name="udate"]').value = postBoard.udate;
       changeReadMode(frm);
-    });
+    };
   };
 
 
-  async const changeReadMode = frm => {
+  const changeReadMode = frm => {
     frm.classList.toggle('mode-read', true);
     frm.classList.toggle('mode-edit', false);
     [...frm.querySelectorAll('input,textarea')]
@@ -152,10 +156,20 @@ async function displayReadForm() {
     const $btnEdit = $btns.querySelector('#btnEdit');
 
     //수정
-    $btnEdit.onclick = () => changeEditMode(frm);
+    $btnEdit.onclick = () => {
+
+      changeEditMode(frm);
+    };
 
     //삭제
     $btnDelete.onclick = ()  => {
+      const postIdValue = frm.querySelector('input[name="postId"]').value;
+      if (!postIdValue || isNaN(postIdValue)) {
+        alert('유효한 게시글 아이디를 확인해주세요.');
+        return;
+      }
+
+
       const pid = frm.postId.value;
       if (!pid) {
         alert('게시글조회 후 삭제바랍니다.');

@@ -146,8 +146,8 @@ public class ApiPostCommentController {
     boolean isAuthor    = findedpostComment.getMemberId().equals(loginMemberId);
     boolean isAdminCode = "M01A1".equals(loginGubun) || "M01A2".equals(loginGubun);
 
-    if (!isAuthor && !isAdminCode) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자 또는 관리자만 댓글을 수정할 수 있습니다.");
+    if (!isAuthor) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 댓글을 수정할 수 있습니다.");
     }
 
     //2) 댓글수정
@@ -191,8 +191,8 @@ public class ApiPostCommentController {
     boolean isAuthor    = findedPostComment.getMemberId().equals(loginMemberId);
     boolean isAdminCode = "M01A1".equals(loginGubun) || "M01A2".equals(loginGubun);
 
-    if (!isAuthor && !isAdminCode) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자 또는 관리자만 댓글을 삭제할 수 있습니다.");
+    if (!isAuthor) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 댓글을 삭제할 수 있습니다.");
     }
 
 
