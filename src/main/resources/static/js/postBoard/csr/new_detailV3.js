@@ -264,6 +264,7 @@ divEle.setAttribute('id','reply_pagenation');
 document.body.appendChild(divEle);
 
 
+
 //게시글 조회
 const getPostComment = async (pid,commentId) => {
   console.log('pid:', pid, 'cid:', commentId);
@@ -292,7 +293,7 @@ const getPostComment = async (pid,commentId) => {
 };
 
 //댓글 저장
-const addPostComment = async (frm,comment) => {
+const addPostComment = async (comment,$frm) => {
   try {
     const url = `/api/postBoards/${pid}/postComment`;
     const result = await ajax.post(url,comment);
@@ -403,6 +404,50 @@ async function configPagination(){
     console.error(err);
   }
 }
+
+//상품등록 화면
+function displayForm() {
+  //상품등록
+  const $addFormWrap = document.createElement('div');
+  $addFormWrap.innerHTML = `
+    <form id="frm">
+      <div>
+          <label for="commentContent">댓글</label>
+          <input type="text" id="commentContent" name="commentContent"/>
+          <span class="field-error client" id="errCommentContent"></span>
+      </div>
+      <div>
+          <button id="btnAdd" type="submit">등록</button>
+      </div>
+    </form>
+  `;
+
+  $readFormWrap.insertAdjacentElement('afterend', $addFormWrap);
+
+  const $frm = $addFormWrap.querySelector('#frm');
+  const $err = $frm.querySelector('#errCommentContent');
+
+  $frm.addEventListener('submit', async e => {
+    e.preventDefault(); // 기본동작 중지
+
+    //유효성 체크
+    if($frm.commentContent.value.trim().length === 0) {
+      errCommentContent.textContent = '내용은 필수 입니다';
+      $frm.commentContent.focus();
+      return;
+    }
+    $err.textContent = '';
+
+    const dto = {
+      content: $frm.commentContent.value.trim(),
+    };
+
+    const ok = await addPostComment(dto, $frm);
+    if (ok) $frm.commentContent.focus();
+
+  });
+}
+displayForm();
 
 //댓글목록 화면
 async function displayPostCommentList(postComments) {
@@ -520,20 +565,10 @@ async function displayPostCommentList(postComments) {
       </tbody>
     </table>`;
 
-  const $editBtns = $list.querySelectorAll('.btnEditComment');
-  const $delBtns  = $list.querySelectorAll('.btnDeleteComment');
+  for (const pc of postComments) {
+    await changeCommentReadMode(pc.commentId); // 하나 끝날 때까지 대기
+  }
 
-  $editBtns.forEach(btn =>
-    btn.onclick = e => {
-      const cid = e.target.closest('tr[data-cid]').dataset.cid;
-      changeCommentEditMode(cid);
-    });
-
-  $delBtns.forEach(btn =>
-    btn.onclick = e => {
-      const cid = e.target.closest('tr[data-cid]').dataset.cid;
-      if (confirm('삭제하시겠습니까?')) delPostComment(pid, cid);
-    });
 };
 configPagination();
 
